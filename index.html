@@ -13,8 +13,6 @@
     }
 
     .card {
-        width: 600px;
-        height: 1050px;
         background-size: cover;
         background-position: center;
         position: relative;
@@ -45,7 +43,7 @@
     #cardTier { top: 740px; font-size: 36px; }
     #cardExpiry { top: 910px; font-size: 32px; }
 
-    #copyCard {
+    button {
         margin-top: 20px;
         padding: 12px 22px;
         font-size: 18px;
@@ -89,11 +87,18 @@
     <div id="cardExpiry"></div>
 </div>
 
-<button id="copyCard" onclick="copyCard()">Copy Card</button>
+<button onclick="copyCard()">Copy Card</button>
+<button onclick="downloadCard()">Download Card</button>
 
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
 <script>
+const backgrounds = {
+    silver: "background1.png",
+    gold: "background2.png",
+    diamond: "background3.png"
+};
+
 function generateCard() {
     const tier = document.getElementById("tierInput").value;
     const card = document.getElementById("card");
@@ -105,15 +110,26 @@ function generateCard() {
         diamond: "#b97a6c"
     };
 
-    const backgrounds = {
-        silver: "background1.png",
-        gold: "background2.png",
-        diamond: "background3.png"
+    const bgPath = backgrounds[tier];
+
+    // Load background image to detect size
+    const bgImg = new Image();
+    bgImg.src = bgPath;
+    bgImg.onload = function () {
+        card.style.width = bgImg.width + "px";
+        card.style.height = bgImg.height + "px";
     };
 
-    document.getElementById("cardName").innerText = document.getElementById("nameInput").value;
-    document.getElementById("cardTier").innerText = tier.charAt(0).toUpperCase() + tier.slice(1);
-    document.getElementById("cardExpiry").innerText = "Valid until: " + document.getElementById("expiryInput").value;
+    card.style.backgroundImage = `url('${bgPath}')`;
+
+    document.getElementById("cardName").innerText =
+        document.getElementById("nameInput").value;
+
+    document.getElementById("cardTier").innerText =
+        tier.charAt(0).toUpperCase() + tier.slice(1);
+
+    document.getElementById("cardExpiry").innerText =
+        "Valid until: " + document.getElementById("expiryInput").value;
 
     const color = colors[tier];
     document.getElementById("cardName").style.color = color;
@@ -121,7 +137,6 @@ function generateCard() {
     document.getElementById("cardExpiry").style.color = color;
 
     img.style.borderColor = color;
-    card.style.backgroundImage = `url('${backgrounds[tier]}')`;
 
     const file = document.getElementById("photoInput").files[0];
     if (file) {
@@ -139,24 +154,34 @@ async function copyCard() {
 
     html2canvas(card, {
         useCORS: true,
-        allowTaint: true,
         backgroundColor: null,
         scale: 3
     }).then(async (canvas) => {
-
         canvas.toBlob(async (blob) => {
             try {
                 await navigator.clipboard.write([
                     new ClipboardItem({ "image/png": blob })
                 ]);
-
-                alert("Card copied to clipboard! Now you can paste it anywhere—Imgur, Discord, etc.");
-
+                alert("Card copied to clipboard!");
             } catch (err) {
-                console.error(err);
-                alert("Copy failed. Your browser may not support image clipboard copy.");
+                alert("Copy failed. Browser may not support copying images.");
             }
-        }, "image/png");
+        });
+    });
+}
+
+function downloadCard() {
+    const card = document.getElementById("card");
+
+    html2canvas(card, {
+        useCORS: true,
+        backgroundColor: null,
+        scale: 3
+    }).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "membership-card.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
     });
 }
 </script>
