@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Membership Card Generator</title>
+
+<style>
+    body {
+        font-family: "Times New Roman", serif;
+        background: #111;
+        color: white;
+        padding: 20px;
+    }
+
+    .card {
+        width: 600px;
+        height: 1050px;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+        margin-top: 20px;
+    }
+
+    #photoPreview {
+        width: 330px;
+        height: 330px;
+        border-radius: 50%;
+        position: absolute;
+        top: 300px;
+        left: 135px;
+        object-fit: cover;
+        display: none;
+        border: 5px solid transparent;
+    }
+
+    #cardName, #cardTier, #cardExpiry {
+        font-family: "Times New Roman", serif;
+        width: 100%;
+        text-align: center;
+        position: absolute;
+        font-weight: bold;
+    }
+
+    #cardName { top: 650px; font-size: 48px; letter-spacing: 2px; }
+    #cardTier { top: 740px; font-size: 36px; }
+    #cardExpiry { top: 910px; font-size: 32px; }
+
+    #copyCard {
+        margin-top: 20px;
+        padding: 12px 22px;
+        font-size: 18px;
+        background: #444;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-family: "Times New Roman", serif;
+    }
+</style>
+</head>
+
+<body>
+
+<h1>Membership Card Generator</h1>
+
+<label>Customer Name:</label><br>
+<input id="nameInput" type="text" style="width:300px;"><br><br>
+
+<label>Tier:</label><br>
+<select id="tierInput" style="width:300px; font-size:16px; font-family:'Times New Roman';">
+    <option value="silver">Silver</option>
+    <option value="gold">Gold</option>
+    <option value="diamond">Diamond</option>
+</select>
+<br><br>
+
+<label>Expiry Date:</label><br>
+<input id="expiryInput" type="date" style="width:300px;"><br><br>
+
+<label>Upload Photo:</label><br>
+<input id="photoInput" type="file" accept="image/*"><br><br>
+
+<button onclick="generateCard()">Generate Card</button>
+
+<div id="card" class="card">
+    <img id="photoPreview" crossOrigin="anonymous">
+    <div id="cardName"></div>
+    <div id="cardTier"></div>
+    <div id="cardExpiry"></div>
+</div>
+
+<button id="copyCard" onclick="copyCard()">Copy Card</button>
+
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<script>
+function generateCard() {
+    const tier = document.getElementById("tierInput").value;
+    const card = document.getElementById("card");
+    const img = document.getElementById("photoPreview");
+
+    const colors = {
+        silver: "#c0c0c0",
+        gold: "#edc552",
+        diamond: "#b97a6c"
+    };
+
+    const backgrounds = {
+        silver: "background1.png",
+        gold: "background2.png",
+        diamond: "background3.png"
+    };
+
+    document.getElementById("cardName").innerText = document.getElementById("nameInput").value;
+    document.getElementById("cardTier").innerText = tier.charAt(0).toUpperCase() + tier.slice(1);
+    document.getElementById("cardExpiry").innerText = "Valid until: " + document.getElementById("expiryInput").value;
+
+    const color = colors[tier];
+    document.getElementById("cardName").style.color = color;
+    document.getElementById("cardTier").style.color = color;
+    document.getElementById("cardExpiry").style.color = color;
+
+    img.style.borderColor = color;
+    card.style.backgroundImage = `url('${backgrounds[tier]}')`;
+
+    const file = document.getElementById("photoInput").files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            img.src = e.target.result;
+            img.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+async function copyCard() {
+    const card = document.getElementById("card");
+
+    html2canvas(card, {
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: null,
+        scale: 3
+    }).then(async (canvas) => {
+
+        canvas.toBlob(async (blob) => {
+            try {
+                await navigator.clipboard.write([
+                    new ClipboardItem({ "image/png": blob })
+                ]);
+
+                alert("Card copied to clipboard! Now you can paste it anywhere—Imgur, Discord, etc.");
+
+            } catch (err) {
+                console.error(err);
+                alert("Copy failed. Your browser may not support image clipboard copy.");
+            }
+        }, "image/png");
+    });
+}
+</script>
+
+</body>
+</html>
