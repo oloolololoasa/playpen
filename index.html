@@ -54,6 +54,10 @@
         cursor: pointer;
         font-family: "Times New Roman", serif;
     }
+
+    button.hidden {
+        display: none;
+    }
 </style>
 </head>
 
@@ -87,8 +91,8 @@
     <div id="cardExpiry"></div>
 </div>
 
-<button onclick="copyCard()">Copy Card</button>
-<button onclick="downloadCard()">Download Card</button>
+<button id="copyBtn" class="hidden" onclick="copyCard()">Copy Card</button>
+<button id="downloadBtn" class="hidden" onclick="downloadCard()">Download Card</button>
 
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
@@ -104,6 +108,10 @@ function generateCard() {
     const card = document.getElementById("card");
     const img = document.getElementById("photoPreview");
 
+    // Hide buttons until card is fully ready
+    document.getElementById("copyBtn").classList.add("hidden");
+    document.getElementById("downloadBtn").classList.add("hidden");
+
     const colors = {
         silver: "#c0c0c0",
         gold: "#edc552",
@@ -112,38 +120,49 @@ function generateCard() {
 
     const bgPath = backgrounds[tier];
 
-    // Load background image to detect size
+    // Load background to get its real size
     const bgImg = new Image();
     bgImg.src = bgPath;
     bgImg.onload = function () {
         card.style.width = bgImg.width + "px";
         card.style.height = bgImg.height + "px";
+        card.style.backgroundImage = `url('${bgPath}')`;
+
+        // Continue only after background loads
+        finishCard();
     };
 
-    card.style.backgroundImage = `url('${bgPath}')`;
+    function finishCard() {
+        document.getElementById("cardName").innerText =
+            document.getElementById("nameInput").value;
 
-    document.getElementById("cardName").innerText =
-        document.getElementById("nameInput").value;
+        document.getElementById("cardTier").innerText =
+            tier.charAt(0).toUpperCase() + tier.slice(1);
 
-    document.getElementById("cardTier").innerText =
-        tier.charAt(0).toUpperCase() + tier.slice(1);
+        document.getElementById("cardExpiry").innerText =
+            "Valid until: " + document.getElementById("expiryInput").value;
 
-    document.getElementById("cardExpiry").innerText =
-        "Valid until: " + document.getElementById("expiryInput").value;
+        const color = colors[tier];
+        document.getElementById("cardName").style.color = color;
+        document.getElementById("cardTier").style.color = color;
+        document.getElementById("cardExpiry").style.color = color;
 
-    const color = colors[tier];
-    document.getElementById("cardName").style.color = color;
-    document.getElementById("cardTier").style.color = color;
-    document.getElementById("cardExpiry").style.color = color;
+        // Load photo
+        const file = document.getElementById("photoInput").files[0];
+        if (!file) {
+            alert("Please upload a photo before generating the card.");
+            return;
+        }
 
-    img.style.borderColor = color;
-
-    const file = document.getElementById("photoInput").files[0];
-    if (file) {
         const reader = new FileReader();
         reader.onload = function (e) {
             img.src = e.target.result;
+            img.style.borderColor = color;
             img.style.display = "block";
+
+            // Now that everything is ready → show buttons
+            document.getElementById("copyBtn").classList.remove("hidden");
+            document.getElementById("downloadBtn").classList.remove("hidden");
         };
         reader.readAsDataURL(file);
     }
